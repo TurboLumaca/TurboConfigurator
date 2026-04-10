@@ -12,6 +12,13 @@ import WorkspaceDetail from "./components/WorkspaceDetail";
 import { getWorkspaceReadiness } from "./domain/workspaceSchema";
 import { workspaceService } from "./services/workspaceService";
 import { useWorkspaceStore } from "./state/workspaceStore";
+import {
+  WORKSPACE_ACTION_TYPES,
+  WORKSPACE_CATEGORIES,
+  WORKSPACE_TRIGGER_TYPES,
+  createWorkspace,
+  createWorkspaceAction,
+} from "./domain/workspaceTypes";
 import "./styles/app.css";
 
 const GROUP_META = [
@@ -366,6 +373,58 @@ function App() {
     }
   }, [autostartEnabled, patchPreferences]);
 
+  const handleCreateWorkspace = useCallback(async () => {
+    const name = window.prompt("Nome workspace (es. Sessione Studio Algebra)");
+    if (!name || !name.trim()) {
+      return;
+    }
+
+    const categoryInput = window.prompt(
+      "Categoria: study | coding | operations | personal",
+      WORKSPACE_CATEGORIES.STUDY,
+    );
+    const category = String(categoryInput || WORKSPACE_CATEGORIES.STUDY).trim().toLowerCase();
+    const normalizedCategory = Object.values(WORKSPACE_CATEGORIES).includes(category)
+      ? category
+      : WORKSPACE_CATEGORIES.OTHER;
+
+    const folderPath = window.prompt("Cartella principale da aprire", "~/Desktop") || "~/Desktop";
+    const shortcutRaw = window.prompt(
+      "Shortcut opzionale (es. Cmd+Opt+9). Lascia vuoto per nessuno.",
+      "",
+    );
+
+    const workspace = createWorkspace({
+      name: name.trim(),
+      description: `Preset creato manualmente per ${name.trim()}.`,
+      category: normalizedCategory,
+      trigger: shortcutRaw?.trim()
+        ? {
+            type: WORKSPACE_TRIGGER_TYPES.GLOBAL_SHORTCUT,
+            label: "Custom shortcut",
+            value: shortcutRaw.trim(),
+          }
+        : null,
+      notes: "Creato da UI",
+      actions: [
+        createWorkspaceAction(WORKSPACE_ACTION_TYPES.OPEN_FOLDER, {
+          name: "Open main folder",
+          description: "Open selected folder in Finder",
+          folderPath,
+        }),
+      ],
+    });
+
+    try {
+      await workspaceService.upsertWorkspace(workspace);
+      await workspaceService.selectWorkspace(workspace.id);
+      setActiveGroupId("all");
+      setNoticeMessage(`Workspace creato: ${workspace.name}`);
+    } catch (error) {
+      setErrorMessage(`Creazione fallita: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, []);
+
   const activeCategory = activeWorkspace?.category || "Workspaces";
   const running = runtime.isRunning;
 
@@ -385,6 +444,9 @@ function App() {
           </div>
 
           <div className="workspace-topbar__status">
+            <button type="button" className="topbar-chip topbar-chip--button" onClick={handleCreateWorkspace}>
+              New Workspace
+            </button>
             <button type="button" className="topbar-chip topbar-chip--button" onClick={handleToggleAutostart}>
               {autostartEnabled ? "Autostart On" : "Autostart Off"}
             </button>
