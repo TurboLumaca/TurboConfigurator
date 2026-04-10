@@ -25,7 +25,7 @@ function toStatusLabel(runtime, workspaceId) {
   return "Last run failed";
 }
 
-function WorkspaceDetail({ workspace, runtime, running = false, onRunWorkspace }) {
+function WorkspaceDetail({ workspace, runtime, running = false, onRunWorkspace, onEditWorkspace, onDeleteWorkspace }) {
   if (!workspace) {
     return (
       <main className="detail-panel">
@@ -71,6 +71,19 @@ function WorkspaceDetail({ workspace, runtime, running = false, onRunWorkspace }
             shortcut={workspace.trigger || "Cmd + Enter"}
             disabled={running || (workspace.status || "") !== "Ready"}
           />
+
+          <div className="detail-inline-actions">
+            <button type="button" className="detail-inline-button" onClick={() => onEditWorkspace?.(workspace)}>
+              Edit workspace
+            </button>
+            <button
+              type="button"
+              className="detail-inline-button detail-inline-button--danger"
+              onClick={() => onDeleteWorkspace?.(workspace)}
+            >
+              Delete workspace
+            </button>
+          </div>
 
           <div className="detail-info-card">
             <div className="detail-info-card__label">Quick trigger</div>

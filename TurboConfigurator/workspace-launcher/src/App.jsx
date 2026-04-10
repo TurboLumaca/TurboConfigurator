@@ -9,6 +9,7 @@ import { register, unregisterAll } from "@tauri-apps/plugin-global-shortcut";
 import WorkspaceGroups from "./components/WorkspaceGroups";
 import WorkspaceList from "./components/WorkspaceList";
 import WorkspaceDetail from "./components/WorkspaceDetail";
+import WorkspaceEditorModal from "./components/WorkspaceEditorModal";
 import { getWorkspaceReadiness } from "./domain/workspaceSchema";
 import { workspaceService } from "./services/workspaceService";
 import { useWorkspaceStore } from "./state/workspaceStore";
@@ -62,6 +63,13 @@ const CATEGORY_LABELS = {
   other: "Other",
 };
 
+const CATEGORY_VALUES = Object.values(WORKSPACE_CATEGORIES);
+
+function normalizeCategoryInput(category) {
+  const normalized = String(category || WORKSPACE_CATEGORIES.STUDY).trim().toLowerCase();
+  return CATEGORY_VALUES.includes(normalized) ? normalized : WORKSPACE_CATEGORIES.OTHER;
+}
+
 function formatCategory(category) {
   return CATEGORY_LABELS[category] || category || "Other";
 }
@@ -101,6 +109,76 @@ function getActionTarget(action) {
   if (action.command) return action.command;
   if (action.fileExtensions?.length) return `.${action.fileExtensions.join(", .")}`;
   return "Configured action";
+}
+
+function getPrimaryPathFromWorkspace(workspace) {
+  const actions = Array.isArray(workspace?.actions) ? workspace.actions : [];
+  const actionWithPath = actions.find((action) => action?.folderPath || action?.projectPath);
+  return actionWithPath?.folderPath || actionWithPath?.projectPath || "~/Desktop";
+}
+
+function createDefaultWorkspaceForm() {
+  return {
+    name: "",
+    description: "",
+    category: WORKSPACE_CATEGORIES.STUDY,
+    primaryPath: "~/Desktop",
+    shortcut: "",
+    notes: "",
+  };
+}
+
+function createWorkspaceFormFromSource(workspace) {
+  if (!workspace) {
+    return createDefaultWorkspaceForm();
+  }
+
+  return {
+    name: workspace.name || "",
+    description: workspace.description || "",
+    category: normalizeCategoryInput(workspace.category),
+    primaryPath: getPrimaryPathFromWorkspace(workspace),
+    shortcut: workspace.trigger?.value || "",
+    notes: workspace.notes || "",
+  };
+}
+
+function buildWorkspaceActions(existingActions, primaryPath) {
+  const safeActions = Array.isArray(existingActions) ? existingActions : [];
+  const pathActionIndex = safeActions.findIndex(
+    (action) =>
+      action?.type === WORKSPACE_ACTION_TYPES.OPEN_FOLDER || action?.type === WORKSPACE_ACTION_TYPES.OPEN_VSCODE_PROJECT,
+  );
+
+  if (pathActionIndex === -1) {
+    return [
+      createWorkspaceAction(WORKSPACE_ACTION_TYPES.OPEN_FOLDER, {
+        name: "Open main folder",
+        description: "Open selected folder in Finder",
+        folderPath: primaryPath,
+      }),
+      ...safeActions,
+    ];
+  }
+
+  return safeActions.map((action, index) => {
+    if (index !== pathActionIndex) {
+      return action;
+    }
+
+    if (action.type === WORKSPACE_ACTION_TYPES.OPEN_VSCODE_PROJECT) {
+      return createWorkspaceAction(WORKSPACE_ACTION_TYPES.OPEN_VSCODE_PROJECT, {
+        ...action,
+        projectPath: primaryPath,
+        folderPath: action.folderPath || primaryPath,
+      });
+    }
+
+    return createWorkspaceAction(WORKSPACE_ACTION_TYPES.OPEN_FOLDER, {
+      ...action,
+      folderPath: primaryPath,
+    });
+  });
 }
 
 function toWorkspaceCardModel(workspace, readiness, runtime) {
@@ -151,6 +229,14 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [autostartEnabled, setAutostartEnabled] = useState(false);
+  const [workspaceEditor, setWorkspaceEditor] = useState({
+    open: false,
+    mode: "create",
+    workspaceId: null,
+  });
+  const [workspaceForm, setWorkspaceForm] = useState(createDefaultWorkspaceForm);
+  const [workspaceFormError, setWorkspaceFormError] = useState("");
+  const [workspaceFormBusy, setWorkspaceFormBusy] = useState(false);
 
   const workspaces = useWorkspaceStore((state) => state.workspaces);
   const preferences = useWorkspaceStore((state) => state.preferences);
@@ -201,6 +287,15 @@ function App() {
     const preferred = visibleWorkspaces.find((workspace) => workspace.id === preferences.activeWorkspaceId);
     return preferred || visibleWorkspaces[0] || null;
   }, [preferences.activeWorkspaceId, visibleWorkspaces]);
+
+  const activeWorkspaceSource = useMemo(() => {
+    if (!activeWorkspace?.id) {
+      return null;
+    }
+
+    const safeWorkspaces = Array.isArray(workspaces) ? workspaces : [];
+    return safeWorkspaces.find((workspace) => workspace?.id === activeWorkspace.id) || null;
+  }, [activeWorkspace?.id, workspaces]);
 
   useEffect(() => {
     workspaceService.hydrate().catch((error) => {
@@ -369,57 +464,150 @@ function App() {
     }
   }, [autostartEnabled, patchPreferences]);
 
-  const handleCreateWorkspace = useCallback(async () => {
-    const name = window.prompt("Nome workspace (es. Sessione Studio Algebra)");
-    if (!name || !name.trim()) {
+  const handleOpenCreateEditor = useCallback(() => {
+    setWorkspaceForm(createDefaultWorkspaceForm());
+    setWorkspaceFormError("");
+    setWorkspaceEditor({
+      open: true,
+      mode: "create",
+      workspaceId: null,
+    });
+  }, []);
+
+  const handleOpenEditEditor = useCallback(
+    (workspaceId) => {
+      const safeWorkspaces = Array.isArray(workspaces) ? workspaces : [];
+      const sourceWorkspace = safeWorkspaces.find((workspace) => workspace?.id === workspaceId);
+
+      if (!sourceWorkspace) {
+        setErrorMessage("Cannot edit workspace: source data not found.");
+        return;
+      }
+
+      setWorkspaceForm(createWorkspaceFormFromSource(sourceWorkspace));
+      setWorkspaceFormError("");
+      setWorkspaceEditor({
+        open: true,
+        mode: "edit",
+        workspaceId,
+      });
+    },
+    [workspaces],
+  );
+
+  const handleCloseEditor = useCallback(() => {
+    setWorkspaceEditor((state) => ({ ...state, open: false }));
+    setWorkspaceFormError("");
+  }, []);
+
+  const handleWorkspaceFormChange = useCallback((field, value) => {
+    setWorkspaceForm((state) => ({
+      ...state,
+      [field]: value,
+    }));
+  }, []);
+
+  const handleSubmitWorkspaceEditor = useCallback(async () => {
+    const name = String(workspaceForm.name || "").trim();
+    const description = String(workspaceForm.description || "").trim();
+    const primaryPath = String(workspaceForm.primaryPath || "").trim();
+    const category = normalizeCategoryInput(workspaceForm.category);
+    const shortcut = String(workspaceForm.shortcut || "").trim();
+    const notes = String(workspaceForm.notes || "").trim();
+
+    if (!name) {
+      setWorkspaceFormError("Workspace name is required.");
       return;
     }
 
-    const categoryInput = window.prompt(
-      "Categoria: study | coding | operations | personal",
-      WORKSPACE_CATEGORIES.STUDY,
-    );
-    const category = String(categoryInput || WORKSPACE_CATEGORIES.STUDY).trim().toLowerCase();
-    const normalizedCategory = Object.values(WORKSPACE_CATEGORIES).includes(category)
-      ? category
-      : WORKSPACE_CATEGORIES.OTHER;
+    if (!description) {
+      setWorkspaceFormError("Workspace description is required.");
+      return;
+    }
 
-    const folderPath = window.prompt("Cartella principale da aprire", "~/Desktop") || "~/Desktop";
-    const shortcutRaw = window.prompt(
-      "Shortcut opzionale (es. Cmd+Opt+9). Lascia vuoto per nessuno.",
-      "",
-    );
+    if (!primaryPath) {
+      setWorkspaceFormError("Primary path is required.");
+      return;
+    }
 
-    const workspace = createWorkspace({
-      name: name.trim(),
-      description: `Preset creato manualmente per ${name.trim()}.`,
-      category: normalizedCategory,
-      trigger: shortcutRaw?.trim()
-        ? {
-            type: WORKSPACE_TRIGGER_TYPES.GLOBAL_SHORTCUT,
-            label: "Custom shortcut",
-            value: shortcutRaw.trim(),
-          }
-        : null,
-      notes: "Creato da UI",
-      actions: [
-        createWorkspaceAction(WORKSPACE_ACTION_TYPES.OPEN_FOLDER, {
-          name: "Open main folder",
-          description: "Open selected folder in Finder",
-          folderPath,
-        }),
-      ],
-    });
+    setWorkspaceFormBusy(true);
+    setWorkspaceFormError("");
+    setErrorMessage("");
 
     try {
-      await workspaceService.upsertWorkspace(workspace);
-      await workspaceService.selectWorkspace(workspace.id);
+      const safeWorkspaces = Array.isArray(workspaces) ? workspaces : [];
+      const sourceWorkspace =
+        workspaceEditor.mode === "edit"
+          ? safeWorkspaces.find((workspace) => workspace?.id === workspaceEditor.workspaceId) || null
+          : null;
+
+      if (workspaceEditor.mode === "edit" && !sourceWorkspace) {
+        throw new Error("Workspace to update no longer exists.");
+      }
+
+      const nextWorkspace = createWorkspace({
+        ...(sourceWorkspace || {}),
+        name,
+        description,
+        category,
+        trigger: shortcut
+          ? {
+              type: WORKSPACE_TRIGGER_TYPES.GLOBAL_SHORTCUT,
+              label: "Custom shortcut",
+              value: shortcut,
+            }
+          : null,
+        notes: notes || "Configured from TurboConfigurator UI",
+        actions: buildWorkspaceActions(sourceWorkspace?.actions || [], primaryPath),
+      });
+
+      await workspaceService.upsertWorkspace(nextWorkspace);
+      await workspaceService.selectWorkspace(nextWorkspace.id);
+
+      setWorkspaceEditor({
+        open: false,
+        mode: "create",
+        workspaceId: null,
+      });
       setActiveGroupId("all");
-      setNoticeMessage(`Workspace creato: ${workspace.name}`);
+      setNoticeMessage(
+        workspaceEditor.mode === "edit"
+          ? `Workspace updated: ${nextWorkspace.name}`
+          : `Workspace created: ${nextWorkspace.name}`,
+      );
     } catch (error) {
-      setErrorMessage(`Creazione fallita: ${error instanceof Error ? error.message : String(error)}`);
+      setWorkspaceFormError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setWorkspaceFormBusy(false);
     }
-  }, []);
+  }, [workspaceEditor.mode, workspaceEditor.workspaceId, workspaceForm, workspaces]);
+
+  const handleDeleteWorkspace = useCallback(
+    async (workspaceId) => {
+      const safeWorkspaces = Array.isArray(workspaces) ? workspaces : [];
+      const sourceWorkspace = safeWorkspaces.find((workspace) => workspace?.id === workspaceId);
+
+      if (!sourceWorkspace) {
+        setErrorMessage("Cannot delete workspace: source data not found.");
+        return;
+      }
+
+      const confirmDelete = window.confirm(`Delete workspace "${sourceWorkspace.name}"?`);
+      if (!confirmDelete) {
+        return;
+      }
+
+      setErrorMessage("");
+
+      try {
+        await workspaceService.removeWorkspace(workspaceId);
+        setNoticeMessage(`Workspace deleted: ${sourceWorkspace.name}`);
+      } catch (error) {
+        setErrorMessage(`Delete failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    },
+    [workspaces],
+  );
 
   const activeCategory = activeWorkspace?.category || "Workspaces";
   const running = runtime.isRunning;
@@ -440,7 +628,7 @@ function App() {
           </div>
 
           <div className="workspace-topbar__status">
-            <button type="button" className="topbar-chip topbar-chip--button" onClick={handleCreateWorkspace}>
+            <button type="button" className="topbar-chip topbar-chip--button" onClick={handleOpenCreateEditor}>
               New Workspace
             </button>
             <button type="button" className="topbar-chip topbar-chip--button" onClick={handleToggleAutostart}>
@@ -480,9 +668,31 @@ function App() {
             runtime={runtime}
             running={running}
             onRunWorkspace={handleRunWorkspace}
+            onEditWorkspace={(workspace) => handleOpenEditEditor(workspace.id)}
+            onDeleteWorkspace={(workspace) => handleDeleteWorkspace(workspace.id)}
           />
         </section>
       </div>
+
+      <WorkspaceEditorModal
+        open={workspaceEditor.open}
+        mode={workspaceEditor.mode}
+        value={workspaceForm}
+        busy={workspaceFormBusy}
+        errorMessage={workspaceFormError}
+        onChange={handleWorkspaceFormChange}
+        onClose={handleCloseEditor}
+        onSubmit={handleSubmitWorkspaceEditor}
+        canDelete={Boolean(activeWorkspaceSource?.id && workspaceEditor.mode === "edit")}
+        onDelete={
+          activeWorkspaceSource?.id && workspaceEditor.mode === "edit"
+            ? () => {
+                handleCloseEditor();
+                handleDeleteWorkspace(activeWorkspaceSource.id);
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '../state/workspaceStore';
 describe('App', () => {
   beforeEach(() => {
     useWorkspaceStore.getState().reset();
+    window.localStorage.clear();
   });
 
   test('renderizza senza crash', async () => {
