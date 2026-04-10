@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Workspace Automation UI</title>
+  <style>
+    :root {
+      --bg-0: #eef2f7;
+      --bg-1: rgba(255, 255, 255, 0.72);
+      --bg-2: rgba(255, 255, 255, 0.88);
+      --bg-3: rgba(246, 248, 252, 0.86);
+      --line: rgba(15, 23, 42, 0.08);
+      --line-strong: rgba(15, 23, 42, 0.14);
+      --text-1: #0f172a;
+      --text-2: #475569;
+      --text-3: #64748b;
+      --accent: #0071e3;
+      --accent-soft: rgba(0, 113, 227, 0.12);
+      --green: #2fb344;
+      --red: #ff5f57;
+      --yellow: #febc2e;
+      --green-dot: #28c840;
+      --shadow-xl: 0 22px 50px rgba(15, 23, 42, 0.12);
+      --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --blur: blur(24px) saturate(160%);
+      --sidebar-w: 280px;
+      --macros-w: 320px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      color: var(--text-1);
+      background:
+        radial-gradient(circle at top left, rgba(118, 182, 255, 0.25), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(255, 190, 120, 0.16), transparent 24%),
+        linear-gradient(180deg, #f7f9fc 0%, #e9eef6 100%);
+      overflow: hidden;
+    }
+
+    .app-shell {
+      height: 100%;
+      padding: 22px;
+    }
+
+    .window {
+      height: 100%;
+      border-radius: 34px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid rgba(255, 255, 255, 0.52);
+      box-shadow: var(--shadow-xl);
+      display: grid;
+      grid-template-rows: 74px 1fr;
+    }
+
+    .titlebar {
+      display: grid;
+      grid-template-columns: 180px 1fr 320px;
+      align-items: center;
+      padding: 0 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.55));
+      border-bottom: 1px solid var(--line);
+      gap: 16px;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .light {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.5), 0 0 0 0.5px rgba(0,0,0,0.08);
+    }
+
+    .light.red { background: var(--red); }
+    .light.yellow { background: var(--yellow); }
+    .light.green { background: var(--green-dot); }
+
+    .toolbar-center {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .tool-btn, .icon-btn, .chip, .run-btn {
+      border: 1px solid var(--line);
+      background: var(--bg-2);
+      color: var(--text-1);
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .tool-btn:hover, .icon-btn:hover, .chip:hover, .run-btn:hover {
+      transform: translateY(-1px);
+      background: #fff;
+      border-color: var(--line-strong);
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      justify-content: center;
+      padding: 0;
+      border-radius: 14px;
+    }
+
+    .run-btn {
+      background: linear-gradient(180deg, #1388ff, #0071e3);
+      color: white;
+      border-color: transparent;
+      padding: 10px 16px;
+      font-weight: 600;
+    }
+
+    .toolbar-right {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search {
+      position: relative;
+      min-width: 220px;
+    }
+
+    .search input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.82);
+      border-radius: 18px;
+      padding: 12px 16px 12px 42px;
+      font-size: 14px;
+      outline: none;
+      color: var(--text-1);
+    }
+
+    .search svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.5;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) var(--macros-w) 1fr;
+      min-height: 0;
+    }
+
+    .panel {
+      min-height: 0;
+      padding: 18px;
+      border-right: 1px solid var(--line);
+      background: rgba(255,255,255,0.2);
+    }
+
+    .panel:last-child { border-right: none; }
+
+    .sidebar, .macro-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 4px 0;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+    }
+
+    .panel-body {
+      min-height: 0;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .section-card {
+      background: var(--bg-1);
+      border: 1px solid rgba(255,255,255,0.45);
+      border-radius: 22px;
+      padding: 12px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav-item {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: 180ms ease;
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.72);
+      color: var(--text-1);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(180deg, rgba(0,113,227,0.16), rgba(0,113,227,0.09));
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(0,113,227,0.1);
+    }
+
+    .badge {
+      min-width: 22px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.06);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    .active .badge {
+      background: rgba(0,113,227,0.12);
+      color: var(--accent);
+    }
+
+    .macro-card {
+      border-radius: 20px;
+      border: 1px solid transparent;
+      padding: 14px;
+      background: rgba(255,255,255,0.55);
+      display: grid;
+      gap: 10px;
+      cursor: pointer;
+      transition: 180ms ease;
+      margin-bottom: 10px;
+    }
+
+    .macro-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(15, 23, 42, 0.08);
+      background: rgba(255,255,255,0.88);
+    }
+
+    .macro-card.selected {
+      background: linear-gradient(180deg, rgba(0,113,227,0.14), rgba(255,255,255,0.86));
+      border-color: rgba(0,113,227,0.18);
+      box-shadow: 0 12px 24px rgba(0, 113, 227, 0.09);
+    }
+
+    .macro-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .macro-name {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .macro-sub {
+      font-size: 13px;
+      color: var(--text-3);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.06);
+      color: var(--text-2);
+    }
+
+    .main {
+      padding: 20px;
+      min-height: 0;
+      overflow: auto;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12));
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(247,250,255,0.74));
+      border: 1px solid rgba(255,255,255,0.68);
+      border-radius: 30px;
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 62ch;
+    }
+
+    .hero-side {
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .metric .value {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+
+    .metric .label {
+      font-size: 12px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,250,254,0.78));
+      border: 1px solid rgba(255,255,255,0.62);
+      border-radius: 28px;
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+
+    .action-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .action {
+      display: grid;
+      grid-template-columns: 46px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      transition: 180ms ease;
+    }
+
+    .action:hover {
+      background: rgba(255,255,255,0.95);
+      transform: translateY(-1px);
+    }
+
+    .action-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(0,113,227,0.14), rgba(0,113,227,0.08));
+      color: var(--accent);
+    }
+
+    .action-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .action-desc {
+      font-size: 13px;
+      color: var(--text-3);
+      line-height: 1.4;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(47,179,68,0.1);
+      color: #1e7a2d;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .mini-card {
+      border-radius: 22px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--line);
+      padding: 16px;
+    }
+
+    .mini-card h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .mini-card p {
+      margin: 0;
+      color: var(--text-3);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .log {
+      margin-top: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .log-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.45;
+    }
+
+    .log-time {
+      color: var(--text-3);
+      min-width: 42px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kbd {
+      font: inherit;
+      font-size: 12px;
+      padding: 4px 7px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+    }
+
+    .footer-bar {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+    }
+
+    .footer-left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    .ghost {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .outline {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(15, 23, 42, 0.14);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    @media (max-width: 1320px) {
+      .content {
+        grid-template-columns: 240px 280px 1fr;
+      }
+      .hero, .grid { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 1040px) {
+      .window {
+        grid-template-rows: auto 1fr;
+      }
+      .titlebar {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+      .toolbar-center, .toolbar-right {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .content {
+        grid-template-columns: 1fr;
+      }
+      .panel {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="window">
+      <header class="titlebar">
+        <div class="traffic-lights" aria-hidden="true">
+          <span class="light red"></span>
+          <span class="light yellow"></span>
+          <span class="light green"></span>
+        </div>
+
+        <div class="toolbar-center">
+          <button class="tool-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            New Workspace
+          </button>
+          <button class="icon-btn" title="History">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/><path d="M12 7v5l4 2"/></svg>
+          </button>
+          <button class="icon-btn" title="Automation Settings">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M12 4h9"/><path d="M4 9h16"/><path d="M4 15h16"/><circle cx="8" cy="4" r="2"/><circle cx="16" cy="20" r="2"/><circle cx="8" cy="15" r="2"/><circle cx="16" cy="9" r="2"/></svg>
+          </button>
+          <button class="run-btn" id="runWorkspace">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Run Workspace
+          </button>
+        </div>
+
+        <div class="toolbar-right">
+          <div class="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="text" placeholder="Search workspace, action, command" />
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <aside class="panel sidebar">
+          <div class="panel-header">
+            <div class="panel-title">Groups</div>
+            <button class="icon-btn" title="Add Group">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <div class="panel-body">
+            <div class="section-card nav-group" id="groupList">
+              <div class="nav-item active" data-group="all">
+                <span>▦</span>
+                <span>All Workspaces</span>
+                <span class="badge">7</span>
+              </div>
+              <div class="nav-item" data-group="study">
+                <span>⌘</span>
+                <span>Study</span>
+                <span class="badge">3</span>
+              </div>
+              <div class="nav-item" data-group="coding">
+                <span>⌥</span>
+                <span>Coding</span>
+                <span class="badge">2</span>
+              </div>
+              <div class="nav-item" data-group="ops">
+                <span>◌</span>
+                <span>Operations</span>
+                <span class="badge">1</span>
+              </div>
+              <div class="nav-item" data-group="personal">
+                <span>◇</span>
+                <span>Personal</span>
+                <span class="badge">1</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="panel macro-list">
+          <div class="panel-header">
+            <div class="panel-title">Workspaces</div>
+            <button class="icon-btn" title="Import Workspace">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            </button>
+          </div>
+          <div class="panel-body" id="workspaceList"></div>
+        </section>
+
+        <main class="main">
+          <section class="hero">
+            <div>
+              <div class="eyebrow">Context Automation</div>
+              <h1 id="heroTitle">Aurea Dev Session</h1>
+              <p id="heroText">Launch your full development context in one step: open the repo, pull the latest changes, start VS Code, bring up documentation, and keep the workspace clean and focused.</p>
+              <div class="quick-actions">
+                <button class="chip" id="triggerChip"><span class="kbd">⌃⌥A</span> Quick Trigger</button>
+                <button class="chip ghost">Auto-run at Login</button>
+                <button class="chip outline">Edit Sequence</button>
+              </div>
+            </div>
+            <div class="hero-side">
+              <div class="metric-grid">
+                <div class="metric">
+                  <div class="value" id="metricActions">6</div>
+                  <div class="label">Actions</div>
+                </div>
+                <div class="metric">
+                  <div class="value" id="metricTime">12s</div>
+                  <div class="label">Launch Time</div>
+                </div>
+                <div class="metric">
+                  <div class="value" id="metricApps">4</div>
+                  <div class="label">Apps Used</div>
+                </div>
+              </div>
+              <div class="mini-card">
+                <h3>Current State</h3>
+                <p id="stateText">Ready to launch. This workspace will restore your coding environment and prepare the project for the next session.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="grid">
+            <div class="card">
+              <div class="card-top">
+                <h2>Action Sequence</h2>
+                <span class="status"><span class="status-dot"></span> Ready</span>
+              </div>
+              <div class="action-list" id="actionList"></div>
+            </div>
+
+            <div class="stack">
+              <div class="card">
+                <div class="card-top">
+                  <h2>Workspace Details</h2>
+                  <button class="chip">Configure</button>
+                </div>
+                <div class="mini-card" style="margin-bottom: 12px;">
+                  <h3>Category</h3>
+                  <p id="detailCategory">Coding</p>
+                </div>
+                <div class="mini-card" style="margin-bottom: 12px;">
+                  <h3>Trigger</h3>
+                  <p id="detailTrigger">Launch manually or with keyboard shortcut ⌃⌥A.</p>
+                </div>
+                <div class="mini-card">
+                  <h3>Primary Goal</h3>
+                  <p id="detailGoal">Open the correct tools and remove setup friction before coding starts.</p>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-top">
+                  <h2>Recent Activity</h2>
+                  <button class="chip ghost">Live Log</button>
+                </div>
+                <div class="log" id="activityLog"></div>
+              </div>
+            </div>
+          </section>
+
+          <div class="footer-bar">
+            <div class="footer-left">
+              <span class="muted">Modern workspace automation interface concept</span>
+              <span class="pill">Apple-style glass UI</span>
+              <span class="pill">Local-first</span>
+              <span class="pill">Preset driven</span>
+            </div>
+            <div>
+              <button class="tool-btn">Save Layout</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const workspaces = [
+      {
+        id: 'aurea',
+        group: 'coding',
+        name: 'Aurea Dev Session',
+        subtitle: 'Repo setup, terminal commands, docs and VS Code in one launch.',
+        tags: ['Git', 'VS Code', 'Terminal', 'Docs'],
+        title: 'Aurea Dev Session',
+        text: 'Launch your full development context in one step: open the repo, pull the latest changes, start VS Code, bring up documentation, and keep the workspace clean and focused.',
+        metrics: { actions: 6, time: '12s', apps: 4 },
+        trigger: '⌃⌥A',
+        category: 'Coding',
+        goal: 'Open the correct tools and remove setup friction before coding starts.',
+        state: 'Ready to launch. This workspace will restore your coding environment and prepare the project for the next session.',
+        actions: [
+          { icon: '⌂', title: 'Open project folder', desc: 'Reveal ~/Projects/Aurea in Finder and bring it to front.', state: 'Instant' },
+          { icon: '>', title: 'Run terminal sequence', desc: 'Open Terminal, move into the repo, run git pull and show the result.', state: 'Scripted' },
+          { icon: '</>', title: 'Open in VS Code', desc: 'Launch the repository in VS Code and restore your preferred window.', state: 'Focus' },
+          { icon: '⊞', title: 'Open project resources', desc: 'Bring up GitHub, issue board and architecture notes in the browser.', state: 'Web' },
+          { icon: '◻', title: 'Close unrelated windows', desc: 'Optionally clean distraction windows before the coding session starts.', state: 'Optional' },
+          { icon: '✓', title: 'Show completion state', desc: 'Display a small success banner when the workspace is fully ready.', state: 'Feedback' }
+        ],
+        logs: [
+          ['09:02', 'Workspace launched successfully.'],
+          ['09:02', 'Terminal executed git pull in 1.8 seconds.'],
+          ['09:03', 'VS Code restored last active project window.']
+        ]
+      },
+      {
+        id: 'metodi',
+        group: 'study',
+        name: 'Metodi Numerici',
+        subtitle: 'Course folder, last PDF, browser resources and distraction cleanup.',
+        tags: ['PDF', 'Course', 'Browser'],
+        title: 'Metodi Numerici',
+        text: 'Prepare a study session by opening the right local folder, restoring the last PDF you used, loading the course website, and filtering out unrelated windows.',
+        metrics: { actions: 5, time: '8s', apps: 3 },
+        trigger: '⌃⌥M',
+        category: 'Study',
+        goal: 'Start studying immediately without searching files or reopening useful resources by hand.',
+        state: 'Configured for focused study. Ideal for quickly re-entering the exact course context you were using last time.',
+        actions: [
+          { icon: '⌂', title: 'Open course folder', desc: 'Bring the Metodi Numerici directory to the foreground in Finder.', state: 'Instant' },
+          { icon: '◫', title: 'Restore last PDF', desc: 'Open the last accessed lecture or exercise PDF from the course folder.', state: 'Smart' },
+          { icon: '⊞', title: 'Open professor resources', desc: 'Load the browser tab with the course page or authentication portal.', state: 'Web' },
+          { icon: '☰', title: 'Prepare clean browser state', desc: 'Close or isolate unrelated tabs depending on your saved preference.', state: 'Focused' },
+          { icon: '✓', title: 'Show ready message', desc: 'Confirm that the study workspace is ready to use.', state: 'Feedback' }
+        ],
+        logs: [
+          ['14:11', 'Last PDF restored from Numerical Methods folder.'],
+          ['14:12', 'Course website loaded in Safari.'],
+          ['14:12', 'Workspace entered Focused Study state.']
+        ]
+      },
+      {
+        id: 'db',
+        group: 'study',
+        name: 'Basi di Dati',
+        subtitle: 'Open ER materials, schema folder and browser references.',
+        tags: ['Schemas', 'PDF', 'Reference'],
+        title: 'Basi di Dati',
+        text: 'Move directly into database design work by opening diagrams, notes and reference pages together in a predictable layout.',
+        metrics: { actions: 4, time: '7s', apps: 3 },
+        trigger: '⌃⌥D',
+        category: 'Study',
+        goal: 'Reduce setup time when switching back into conceptual and logical design tasks.',
+        state: 'Optimized for diagram-heavy work and documentation reading.',
+        actions: [
+          { icon: '⌂', title: 'Open DB project folder', desc: 'Reveal the active database project folder in Finder.', state: 'Instant' },
+          { icon: '◫', title: 'Open latest schema PDF', desc: 'Load the most recently opened ER or notes PDF.', state: 'Smart' },
+          { icon: '⊞', title: 'Open references', desc: 'Launch the browser with documentation and relevant pages.', state: 'Web' },
+          { icon: '✓', title: 'Show summary', desc: 'Display a small banner confirming everything is ready.', state: 'Feedback' }
+        ],
+        logs: [
+          ['18:30', 'Schema notes opened.'],
+          ['18:31', 'Reference sites loaded.'],
+          ['18:31', 'Workspace is ready.']
+        ]
+      },
+      {
+        id: 'morning',
+        group: 'personal',
+        name: 'Morning Reset',
+        subtitle: 'Open planner, notes and a clean browser start.',
+        tags: ['Planning', 'Notes'],
+        title: 'Morning Reset',
+        text: 'Start the day with a calm, clear setup: planner, notes, and a minimal browser environment with only the essentials.',
+        metrics: { actions: 4, time: '6s', apps: 3 },
+        trigger: '⌃⌥R',
+        category: 'Personal',
+        goal: 'Create a low-friction daily startup routine without distraction.',
+        state: 'Designed for low-noise startup and intentional planning.',
+        actions: [
+          { icon: '🗒', title: 'Open planning note', desc: 'Bring your daily note or planning document to the front.', state: 'Instant' },
+          { icon: '⊞', title: 'Open essential tabs', desc: 'Load only the tabs required for your first working block.', state: 'Focused' },
+          { icon: '⌧', title: 'Close leftovers', desc: 'Remove leftover non-essential windows from the previous day.', state: 'Clean' },
+          { icon: '✓', title: 'Enter start mode', desc: 'Show a clear banner that the reset is complete.', state: 'Feedback' }
+        ],
+        logs: [
+          ['08:01', 'Morning planning note opened.'],
+          ['08:01', 'Browser reset completed.'],
+          ['08:02', 'Workspace ready for first block.']
+        ]
+      }
+    ];
+
+    const workspaceList = document.getElementById('workspaceList');
+    const groupList = document.getElementById('groupList');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroText = document.getElementById('heroText');
+    const metricActions = document.getElementById('metricActions');
+    const metricTime = document.getElementById('metricTime');
+    const metricApps = document.getElementById('metricApps');
+    const triggerChip = document.getElementById('triggerChip');
+    const stateText = document.getElementById('stateText');
+    const detailCategory = document.getElementById('detailCategory');
+    const detailTrigger = document.getElementById('detailTrigger');
+    const detailGoal = document.getElementById('detailGoal');
+    const actionList = document.getElementById('actionList');
+    const activityLog = document.getElementById('activityLog');
+    const runWorkspace = document.getElementById('runWorkspace');
+
+    let selectedGroup = 'all';
+    let selectedWorkspace = 'aurea';
+
+    function renderWorkspaceCards() {
+      workspaceList.innerHTML = '';
+      const filtered = workspaces.filter(w => selectedGroup === 'all' || w.group === selectedGroup);
+
+      filtered.forEach(w => {
+        const card = document.createElement('article');
+        card.className = `macro-card ${w.id === selectedWorkspace ? 'selected' : ''}`;
+        card.dataset.id = w.id;
+        card.innerHTML = `
+          <div class="macro-top">
+            <div>
+              <div class="macro-name">${w.name}</div>
+              <div class="macro-sub">${w.subtitle}</div>
+            </div>
+            <span class="badge">${w.actions.length}</span>
+          </div>
+          <div class="pill-row">
+            ${w.tags.map(tag => `<span class="pill">${tag}</span>`).join('')}
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          selectedWorkspace = w.id;
+          renderWorkspaceCards();
+          updateMainView();
+        });
+        workspaceList.appendChild(card);
+      });
+    }
+
+    function updateMainView() {
+      const current = workspaces.find(w => w.id === selectedWorkspace) || workspaces[0];
+      heroTitle.textContent = current.title;
+      heroText.textContent = current.text;
+      metricActions.textContent = current.metrics.actions;
+      metricTime.textContent = current.metrics.time;
+      metricApps.textContent = current.metrics.apps;
+      triggerChip.innerHTML = `<span class="kbd">${current.trigger}</span> Quick Trigger`;
+      stateText.textContent = current.state;
+      detailCategory.textContent = current.category;
+      detailTrigger.textContent = `Launch manually or with keyboard shortcut ${current.trigger}.`;
+      detailGoal.textContent = current.goal;
+
+      actionList.innerHTML = current.actions.map(action => `
+        <div class="action">
+          <div class="action-icon">${action.icon}</div>
+          <div>
+            <div class="action-title">${action.title}</div>
+            <div class="action-desc">${action.desc}</div>
+          </div>
+          <span class="pill">${action.state}</span>
+        </div>
+      `).join('');
+
+      activityLog.innerHTML = current.logs.map(([time, text]) => `
+        <div class="log-item">
+          <div class="log-time">${time}</div>
+          <div>${text}</div>
+        </div>
+      `).join('');
+    }
+
+    groupList.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        groupList.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+        selectedGroup = item.dataset.group;
+        const visible = workspaces.filter(w => selectedGroup === 'all' || w.group === selectedGroup);
+        if (!visible.some(w => w.id === selectedWorkspace)) {
+          selectedWorkspace = visible[0]?.id || workspaces[0].id;
+        }
+        renderWorkspaceCards();
+        updateMainView();
+      });
+    });
+
+    runWorkspace.addEventListener('click', () => {
+      runWorkspace.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        Running...
+      `;
+      setTimeout(() => {
+        runWorkspace.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Run Workspace
+        `;
+      }, 1400);
+    });
+
+    renderWorkspaceCards();
+    updateMainView();
+  </script>
+</body>
+</html>

@@ -5,6 +5,8 @@ function WorkspaceList({
   title = "Workspaces",
   subtitle = "Available presets",
 }) {
+  const safeWorkspaces = Array.isArray(workspaces) ? workspaces : [];
+
   return (
     <section className="panel-shell list-panel">
       <div className="panel-shell__header">
@@ -17,14 +19,15 @@ function WorkspaceList({
 
       <div className="panel-shell__body">
         <div className="workspace-stack">
-          {workspaces.length === 0 ? (
+          {safeWorkspaces.length === 0 ? (
             <div className="empty-state">
               <p className="empty-state__title">No workspaces in this group</p>
               <p className="empty-state__copy">Pick another group to show its presets.</p>
             </div>
           ) : (
-            workspaces.map((workspace, index) => {
+            safeWorkspaces.map((workspace, index) => {
               const isActive = workspace.id === activeWorkspaceId;
+              const safeActions = Array.isArray(workspace.actions) ? workspace.actions : [];
 
               return (
                 <button
@@ -42,7 +45,7 @@ function WorkspaceList({
 
                       <div className="workspace-card__copy">
                         <h3 className="workspace-card__title">{workspace.title}</h3>
-                        <p className="workspace-card__description">{workspace.description}</p>
+                        <p className="workspace-card__description">{workspace.description || "No description"}</p>
                       </div>
                     </div>
 
@@ -51,15 +54,15 @@ function WorkspaceList({
                         workspace.status !== "Ready" ? "workspace-card__status--warning" : ""
                       }`}
                     >
-                      {workspace.status}
+                      {workspace.status || "Unknown"}
                     </span>
                   </div>
 
                   <div className="workspace-card__meta">
-                    <span className="workspace-pill">{workspace.category}</span>
-                    <span className="workspace-pill">{workspace.actions.length} actions</span>
+                    <span className="workspace-pill">{workspace.category || "Other"}</span>
+                    <span className="workspace-pill">{safeActions.length} actions</span>
                     <span className="workspace-pill workspace-pill--soft">
-                      {workspace.executionState}
+                      {workspace.executionState || "Not executable"}
                     </span>
                     {workspace.trigger ? (
                       <span className="workspace-pill workspace-pill--ghost">

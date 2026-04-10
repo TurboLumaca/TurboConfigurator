@@ -5,6 +5,8 @@ function WorkspaceGroups({
   title = "Groups",
   subtitle = "Saved workspace contexts",
 }) {
+  const safeGroups = Array.isArray(groups) ? groups : [];
+
   return (
     <aside className="panel-shell sidebar-panel">
       <div className="panel-shell__header">
@@ -17,7 +19,7 @@ function WorkspaceGroups({
 
       <div className="panel-shell__body">
         <div className="group-stack">
-          {groups.map((group) => {
+          {safeGroups.map((group) => {
             const isActive = group.id === activeGroupId;
 
             return (
@@ -38,7 +40,7 @@ function WorkspaceGroups({
                 </span>
 
                 <span className="group-item__count" aria-label={`${group.count} workspaces`}>
-                  {String(group.count).padStart(2, "0")}
+                  {String(group.count ?? 0).padStart(2, "0")}
                 </span>
               </button>
             );

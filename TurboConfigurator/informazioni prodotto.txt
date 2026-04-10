@@ -1,0 +1,433 @@
+Ecco un report iniziale di prodotto a grandi linee, impostato come base solida da cui partire.
+
+⸻
+
+Report Prodotto – Workspace Automation Tool per macOS
+
+1. Visione del prodotto
+
+Il prodotto è un’app desktop locale per macOS su Apple Silicon, progettata per ridurre l’attrito mentale e operativo che si crea quando una persona passa spesso tra contesti diversi di lavoro, studio o progetto.
+
+L’idea centrale è semplice:
+
+invece di accendere il computer e dover ogni volta:
+	•	aprire manualmente app diverse
+	•	cercare cartelle specifiche
+	•	recuperare l’ultimo file utile
+	•	aprire siti di riferimento
+	•	chiudere ciò che non serve
+	•	eseguire comandi ricorrenti nel terminale
+
+l’utente seleziona un workspace preconfigurato e il sistema esegue automaticamente una sequenza di azioni coerenti con quel contesto.
+
+In pratica, il computer smette di aprirsi “vuoto” e inizia ad aprirsi già orientato verso una modalità precisa di utilizzo.
+
+⸻
+
+2. Problema che risolve
+
+Molte persone usano lo stesso computer per attività molto diverse tra loro:
+	•	studio universitario
+	•	coding
+	•	gestione di progetti
+	•	lavoro freelance
+	•	organizzazione personale
+	•	attività operative ripetitive
+
+Il problema non è solo il tempo perso nei clic.
+
+Il problema vero è:
+	•	dispersione mentale iniziale
+	•	micro-frizioni ripetute ogni giorno
+	•	rischio di dimenticare passaggi utili
+	•	mantenimento di finestre/tab non pertinenti
+	•	avvio non pulito del contesto corretto
+
+Ogni contesto richiede una diversa “configurazione iniziale” del computer. Oggi questa configurazione viene quasi sempre ricostruita a mano.
+
+Il prodotto serve a trasformare questa fase da:
+“ricostruzione manuale del contesto”
+a:
+“attivazione immediata del contesto”.
+
+⸻
+
+3. Utente iniziale
+
+Primo utente target
+
+Tu stesso.
+
+Questo è corretto perché:
+	•	hai un caso d’uso reale
+	•	il problema è frequente
+	•	puoi testare il prodotto ogni giorno
+	•	puoi validare rapidamente cosa è utile e cosa no
+
+Utenti target successivi
+
+Il prodotto non deve restare limitato a studenti molto tecnici.
+
+Può essere utile a:
+	•	studenti universitari che cambiano materia o ambiente di studio
+	•	developer che passano tra repo, tool e routine diverse
+	•	freelance che alternano clienti e progetti
+	•	knowledge workers che lavorano con browser, file locali, PDF, terminale, note, email e tool vari
+	•	utenti produttivi che vogliono “preset di lavoro” e non automazioni sparse
+
+⸻
+
+4. Contesto d’uso
+
+Il tool deve vivere in locale e deve essere pensato per un utilizzo quotidiano, immediato, pratico.
+
+Può essere avviato in due modi principali:
+	1.	all’avvio del Mac
+	2.	subito dopo il login, come app sempre pronta
+
+L’utente deve poter:
+	•	aprire direttamente un workspace
+	•	vedere i workspace già configurati
+	•	lanciare una sequenza con un solo clic
+	•	eventualmente modificare o creare nuovi preset
+
+⸻
+
+5. Esempi concreti di utilizzo
+
+Caso 1 – Metodi Numerici
+
+Quando scegli “Metodi Numerici”, il tool può:
+	•	aprire la cartella locale del corso
+	•	recuperare e aprire l’ultimo PDF usato
+	•	aprire il sito di riferimento della prof o delle risorse web
+	•	chiudere finestre o app non pertinenti
+	•	predisporre il desktop in una configurazione utile allo studio
+
+Caso 2 – Aurea
+
+Quando scegli “Aurea”, il tool può:
+	•	aprire Terminale
+	•	eseguire un comando preconfigurato
+	•	entrare nella directory del progetto
+	•	eseguire git pull
+	•	aprire Visual Studio Code sulla repo
+	•	aprire eventuali tab tecniche o documentazione collegata
+
+Caso 3 – Progetto generico
+
+Per altri progetti, il tool può:
+	•	aprire sempre le stesse app
+	•	aprire le stesse cartelle
+	•	caricare link associati
+	•	predisporre un ambiente operativo già pronto
+	•	chiudere il rumore non utile
+
+⸻
+
+6. Proposta di valore
+
+Il valore non è “aprire app”.
+
+Quello è troppo poco.
+
+Il vero valore è questo:
+
+trasformare un contesto astratto in un ambiente operativo già pronto.
+
+Quindi il prodotto offre:
+	•	riduzione dell’attrito iniziale
+	•	risparmio di tempo operativo
+	•	riduzione della dispersione
+	•	maggiore continuità tra intenzione e azione
+	•	passaggio più rapido da un progetto all’altro
+	•	setup coerente e ripetibile
+
+In altre parole, non è un semplice launcher.
+È un orchestratore di contesti di lavoro.
+
+⸻
+
+7. Caratteristiche chiave del prodotto
+
+7.1 Workspace preconfigurati
+
+Ogni workspace rappresenta un contesto preciso:
+	•	materia
+	•	progetto
+	•	cliente
+	•	routine
+	•	modalità operativa
+
+Ogni workspace contiene una sequenza definita di azioni.
+
+7.2 Esecuzione con un clic
+
+L’utente non deve ricordarsi i passaggi.
+Li seleziona una volta in configurazione, poi li riusa.
+
+7.3 Azioni dentro le app
+
+Il punto importante che hai aggiunto è questo:
+il software non deve limitarsi ad aprire app, ma deve poter eseguire anche azioni specifiche già configurate dentro il contesto delle app.
+
+Esempi:
+	•	aprire il browser su un link preciso
+	•	aprire Finder in una cartella specifica
+	•	aprire l’ultimo PDF utile
+	•	aprire Terminale ed eseguire una sequenza già definita
+	•	aprire VS Code in una repo
+	•	eseguire script locali
+	•	chiudere finestre/app non inerenti
+
+Questo è uno dei pezzi che rende il prodotto più interessante.
+
+7.4 Facilità d’uso
+
+Anche se le azioni possono diventare tecniche, la configurazione deve restare semplice.
+
+L’obiettivo non è fare un tool per smanettoni estremi.
+L’obiettivo è offrire un’interfaccia che permetta anche a un utente non super tecnico di dire:
+	•	apri questa app
+	•	vai qui
+	•	apri questo link
+	•	esegui questo comando
+	•	chiudi queste altre cose
+
+senza dover scrivere codice ogni volta.
+
+7.5 Uso locale
+
+Il prodotto nasce come app locale.
+Questo dà vantaggi:
+	•	maggiore velocità
+	•	minore complessità iniziale
+	•	minori problemi di infrastruttura
+	•	maggiore coerenza con automazioni di sistema
+	•	nessuna dipendenza iniziale da cloud obbligatorio
+
+⸻
+
+8. Posizionamento iniziale
+
+Il prodotto, almeno all’inizio, si posiziona come:
+
+tool desktop per la preparazione intelligente del workspace su macOS
+
+Più nello specifico:
+	•	non semplice launcher
+	•	non task manager
+	•	non solo automazione tecnica
+	•	non sostituto diretto di Keyboard Maestro
+
+Piuttosto:
+interfaccia semplice per attivare setup di lavoro/studio già preparati
+
+La differenza strategica potrebbe stare nel fatto che:
+	•	è focalizzato sui contesti, non sulle macro isolate
+	•	è più leggibile di strumenti ultra-generalisti
+	•	è pensato per preset riutilizzabili
+	•	può essere usato da utenti produttivi non necessariamente hardcore tech
+
+⸻
+
+9. Vincoli tecnici iniziali
+
+Dato il focus iniziale, i vincoli sono chiari:
+	•	piattaforma iniziale: macOS
+	•	architettura target: Apple Silicon
+	•	esecuzione: in locale
+	•	forte integrazione con:
+	•	Finder
+	•	browser
+	•	Terminale
+	•	Visual Studio Code
+	•	PDF locali
+	•	link web
+	•	script shell
+
+Inoltre, il prodotto dovrà tenere conto di:
+	•	permessi macOS
+	•	automazioni consentite dal sistema
+	•	eventuali limiti su controllo di altre app
+	•	stabilità dell’esecuzione automatica
+	•	trasparenza delle azioni eseguite
+
+⸻
+
+10. Complessità reale del prodotto
+
+Qui serve lucidità.
+
+Sulla carta sembra:
+“apri cose e fai due azioni”.
+
+In realtà il prodotto diventa serio appena chiedi:
+	•	affidabilità
+	•	configurazione semplice
+	•	compatibilità con più app
+	•	capacità di fare azioni interne alle app
+	•	recupero di file recenti
+	•	chiusura selettiva di cose non pertinenti
+	•	esecuzione ordinata delle sequenze
+	•	buona esperienza utente
+
+Quindi non è un mini progettino banale.
+È un prodotto che può sembrare piccolo, ma in realtà ha:
+	•	logica di orchestrazione
+	•	logica di configurazione
+	•	logica di automazione
+	•	logica di sicurezza
+	•	logica di UX
+
+⸻
+
+11. MVP consigliato
+
+Per non fare casino, l’MVP dovrebbe essere molto più stretto.
+
+L’MVP dovrebbe fare solo questo:
+	•	mostrare una lista di workspace
+	•	permettere di lanciare un workspace con un clic
+	•	per ogni workspace eseguire una sequenza ordinata di azioni
+	•	supportare queste azioni iniziali:
+	•	apri app
+	•	apri cartella
+	•	apri URL
+	•	esegui comando terminale
+	•	apri progetto VS Code
+	•	apri ultimo file recente da cartella definita
+
+Per ora eviterei:
+	•	automazioni troppo invasive dentro app complesse
+	•	intelligenza troppo automatica
+	•	cloud
+	•	sincronizzazione multi-device
+	•	marketplace di preset
+	•	gestione avanzata di finestre in mille combinazioni
+
+Prima devi dimostrare che il cuore del prodotto funziona davvero.
+
+⸻
+
+12. Potenziale evoluzione futura
+
+Se il tool funziona bene su di te, le estensioni future potrebbero essere:
+	•	editor visuale dei workspace
+	•	suggerimenti automatici basati sull’uso ricorrente
+	•	organizzazione finestre e layout desktop
+	•	modalità focus
+	•	template pronti per studenti, developer, freelance
+	•	esportazione/importazione preset
+	•	supporto ad altre app comuni
+	•	estensione oltre macOS
+
+Ma queste vengono dopo. Prima serve utilità reale.
+
+⸻
+
+13. Rischi principali
+
+13.1 Rischio prodotto
+
+Potresti costruire qualcosa di bello ma non abbastanza utile da essere usato ogni giorno.
+
+13.2 Rischio UX
+
+Se configurarlo è più faticoso che fare tutto a mano, fallisce.
+
+13.3 Rischio tecnico
+
+Le automazioni su macOS possono essere limitate da permessi e comportamenti non sempre lineari.
+
+13.4 Rischio posizionamento
+
+Esistono già tool generici di automazione. Se il tuo è solo “un altro launcher”, non basta.
+
+13.5 Rischio scope creep
+
+Se provi subito a supportare troppi casi, lo rompi prima di validarlo.
+
+⸻
+
+14. Sintesi finale
+
+Questo prodotto ha senso se resta fedele a una promessa precisa:
+
+quando accendo il Mac o inizio una sessione, voglio entrare subito nel contesto giusto senza ricostruirlo manualmente.
+
+Quindi, a grandi linee, il prodotto è:
+	•	un’app locale per macOS Apple Silicon
+	•	focalizzata su workspace preconfigurati
+	•	capace di eseguire sequenze di azioni specifiche
+	•	utile per studio, coding, progetti e lavoro operativo
+	•	abbastanza semplice da usare anche senza essere super tecnici
+	•	abbastanza potente da gestire anche azioni concrete dentro un flusso operativo reale
+
+Il posizionamento corretto non è “tool che apre app”.
+È:
+tool che prepara il tuo ambiente operativo in base al contesto che scegli.
+
+⸻
+
+15. Prossimo passo consigliato
+
+Il prossimo passo sensato è trasformare questo report in 4 blocchi operativi:
+	1.	PRD leggero
+	2.	feature list MVP / v1 / v2
+	3.	architettura tecnica iniziale
+	4.	prompt master per Codex / agente di sviluppo
+
+
+
+Guardando recensioni, documentazione ufficiale e feedback utenti, il quadro generale è abbastanza chiaro: Keyboard Maestro viene apprezzato per la potenza quasi illimitata ma criticato per complessità e manutenzione; Comandi Rapidi piace perché è nativo e accessibile, ma viene spesso criticato per limiti, poca affidabilità e authoring frustrante; Raycast viene apprezzato soprattutto per velocità, UX ed ecosistema, ma le critiche ricorrenti riguardano pricing/subscription, consumo risorse per alcuni utenti e il fatto che non sostituisce davvero un motore di automazione profonda come Keyboard Maestro.  
+
+Keyboard Maestro
+
+Cose più apprezzate
+	•	La potenza. La promessa ufficiale è che puoi automatizzare “virtualmente qualsiasi cosa”, con macro, trigger, gruppi di macro, azioni, clipboard, application switcher e window switcher. Questo è il motivo per cui molti lo considerano uno strumento “totale” più che una semplice utility.  
+	•	La flessibilità pratica. Nei feedback utenti emerge spesso che può rimpiazzare molte utility separate e che permette workaround molto fini, come introdurre micro-delay o costruire palette e flussi personalizzati.  
+	•	La community/documentazione del prodotto è vista come una parte importante del valore, soprattutto quando si entra in automazioni più avanzate.  
+
+Cose più criticate
+	•	La curva di apprendimento. Anche nel forum di Keyboard Maestro ricorre chiaramente il tema del learning curve: menu item macros, naming accurato, organizzazione e logica diventano presto ostici per i nuovi utenti.  
+	•	La complessità crescente delle macro lunghe. Quando i flussi diventano grandi, mantenerli e riorganizzarli diventa pesante; nel forum si parla esplicitamente del bisogno di ripensare da capo macro complesse per non farle degenerare.  
+	•	L’esperienza iniziale non è percepita come “guidata”. Alcuni utenti la leggono come troppo “elite” o poco amichevole per chi non ha già mentalità da automazione.  
+
+Sintesi brutale: Keyboard Maestro è il più forte se vuoi controllo vero. Ma se il prodotto deve essere semplice da configurare e da mantenere, è anche il miglior esempio di cosa non devi copiare sul piano UX.
+
+Comandi Rapidi di macOS
+
+Cose più apprezzate
+	•	È nativo, già integrato nel sistema, e Apple lo presenta come un modo per concatenare più azioni tra app con un click o con Siri. Inoltre può importare molti workflow di Automator, cosa utile per chi ha già basi nel mondo automazione Apple.  
+	•	Per automazioni leggere o personali, il vantaggio grosso è che abbassa la soglia d’ingresso rispetto a strumenti più tecnici. Questo emerge sia dalla documentazione Apple sia da alcuni feedback utenti che lo trovano più accessibile di vecchi strumenti come Automator o AppleScript.  
+
+Cose più criticate
+	•	L’authoring experience. Nei feedback utenti ricorre spesso che costruire shortcut sostanziosi è “clunky”, frustrante e poco elegante.  
+	•	Limiti artificiali e bug. Questa è probabilmente la critica più costante nei thread utente: molte idee sono possibili in teoria, ma nella pratica saltano fuori limitazioni o comportamenti inaffidabili.  
+	•	Scarsa scalabilità mentale. Per workflow semplici va bene; quando cresce la complessità, molti lo percepiscono come meno chiaro e meno governabile di quanto dovrebbe essere. Questo non è detto così da Apple, ovviamente, ma emerge dal contrasto tra la promessa di ampiezza della piattaforma e i feedback sull’uso reale.  
+
+Sintesi brutale: Comandi Rapidi piace perché è lì, gratis, integrato. Ma appena vuoi affidabilità seria e workflow articolati, tanti utenti sbattono contro i suoi limiti.
+
+Raycast
+
+Cose più apprezzate
+	•	Velocità e fluidità. È la qualità citata più spesso: si apre subito, sembra nativo, riduce attrito e contesto perso.  
+	•	UX molto curata e approccio keyboard-first. Viene spesso lodato perché trasforma azioni frequenti in comandi rapidi senza sembrare uno strato goffo sopra macOS.  
+	•	Ecosistema ampio: extension store, script, quicklinks, integrazioni team, AI, note, clipboard, window management. Raycast stesso sottolinea store ed estensioni, e recensioni/editoriali lo descrivono come un pacchetto all-in-one che accorpa diverse utility.  
+
+Cose più criticate
+	•	Il pricing del Pro e delle feature premium. Ufficialmente Raycast è free con limiti, mentre sync, temi, note illimitate e altre funzioni passano dal Pro; l’AI avanzata è un add-on ulteriore. Questa struttura piace poco a chi preferisce one-time purchase o un tool più lineare da comprare una volta sola.  
+	•	Per alcuni utenti è più pesante del necessario. Nei confronti con Alfred compaiono lamentele su uso memoria significativamente maggiore in background, anche se questo è feedback utente e non benchmark universale.  
+	•	Non è il miglior sostituto per automazioni davvero profonde. Raycast è eccellente come launcher, command hub e collante veloce, ma non è visto come il re delle macro complesse nello stile di Keyboard Maestro. Questo è più un limite di posizionamento che un difetto puro.  
+
+Sintesi brutale: Raycast è quello che oggi la gente trova più piacevole da usare ogni giorno. Ma proprio per questo alza l’asticella: se fai un prodotto concorrente, devi batterlo su una nicchia precisa, non “in generale”.
+
+Conclusione utile per il tuo prodotto
+
+Se vuoi costruire il tuo tool, la lezione migliore è questa:
+	•	da Keyboard Maestro devi prendere la profondità delle azioni, ma non la complessità percepita;
+	•	da Comandi Rapidi devi prendere l’accessibilità iniziale, ma non la fragilità;
+	•	da Raycast devi prendere la velocità e la pulizia UX, ma non trasformare il prodotto in un launcher generico pieno di feature laterali.  
+
+La domanda critica è: vuoi competere con questi strumenti in ampiezza, oppure fare una cosa molto più stretta ma nettamente migliore sul caso “attiva il mio contesto di studio/lavoro con azioni già pronte”?

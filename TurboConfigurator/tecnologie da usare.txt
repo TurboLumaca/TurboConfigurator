@@ -1,0 +1,162 @@
+Per il prodotto che avete in mente, lo stack giusto non è “Java desktop classico”.
+
+È questo:
+
+**Stack principale**
+
+* **Tauri 2** come shell desktop
+* **React** per l’interfaccia
+* **Vite** per sviluppo e build frontend
+* **JavaScript** all’inizio, non Java
+* **Tailwind CSS 4** per lo stile
+* **shadcn/ui** per componenti belli e già moderni ([Tauri][1])
+
+Questa è la scelta più coerente perché Tauri è pensato per app desktop leggere e veloci, può usare qualunque frontend HTML/CSS/JS, e per macOS hai plugin ufficiali per autostart, file system, opener, scorciatoie globali e tray. React resta una base solida per UI a componenti, mentre React stesso oggi sconsiglia di partire con Create React App e rimanda a build tool come Vite. ([Tauri][1])
+
+Quindi, in modo concreto:
+
+**1. Contenitore desktop**
+
+* **Tauri 2**
+* build finale come **app macOS bundle**
+* supporto nativo Apple Silicon nel packaging, con configurazione dedicata anche per architetture come `aarch64-apple-darwin` quando servi binari esterni/sidecar ([Tauri][2])
+
+**2. Frontend**
+
+* **React**
+* **Vite**
+* **JavaScript** per partire più veloce
+* eventualmente **TypeScript** più avanti, non subito se vuoi evitare attrito iniziale ([React][3])
+
+**3. UI / estetica**
+
+* **Tailwind CSS 4**
+* **shadcn/ui**
+
+Tailwind ti permette di costruire UI moderne direttamente nel markup con classi utility; shadcn/ui ti dà componenti accessibili e ben disegnati, molto adatti a uno stile pulito quasi Apple-like. ([Tailwind CSS][4])
+
+**4. Stato dell’app**
+
+* **Zustand**
+
+Per un’app locale con pannelli, preset, attività recenti, stato della finestra e selezione del workflow, Zustand è molto più adatto di soluzioni più pesanti: è piccolo, veloce e poco verboso. ([Zustand Documentation][5])
+
+**5. Salvataggio locale**
+
+* **Tauri Store plugin** per:
+
+  * preset
+  * preferenze
+  * ultimi percorsi usati
+  * lista siti da aprire
+  * configurazioni per materia/workflow
+
+Il plugin Store è un key-value persistente ed è perfetto per questa prima fase. ([Tauri][6])
+
+**6. Accesso a file e cartelle**
+
+* **Tauri Dialog plugin** per scegliere cartelle/file
+* **Tauri File System plugin** per leggere directory, cercare PDF, salvare config
+* **Tauri Path API** per gestire percorsi in modo pulito
+* **Tauri Opener plugin** per aprire PDF, cartelle e URL con l’app predefinita o rivelare file nel Finder ([Tauri][7])
+
+Per il tuo caso specifico “apri la cartella locale, trova l’ultimo PDF, aprilo, poi apri certi siti”, questi plugin sono esattamente il cuore tecnico dell’app. ([Tauri][7])
+
+**7. Integrazione con il sistema**
+
+* **Tauri Autostart plugin** per avvio automatico
+* **Tauri Tray / tray icon** per restare disponibile senza occupare sempre una finestra
+* **Tauri Global Shortcut plugin** se vuoi lanciare workflow da tastiera globale ([Tauri][8])
+
+**8. Automazioni macOS vere**
+
+* **zsh script**
+* **AppleScript** dove serve interagire meglio con Finder, Preview, Safari/Chrome o app specifiche
+* esecuzione tramite **Tauri Shell plugin**
+* oppure packaging di piccoli tool esterni come **sidecar binaries** se vuoi operazioni più robuste o riusabili ([Tauri][9])
+
+Questo è il punto importante: non ti serve scrivere la logica in Java. Per le azioni di sistema su Mac è molto più sensato orchestrare script/macOS commands da Tauri. Il plugin Shell consente di lanciare processi figli, e Tauri può anche incorporare binari esterni nel bundle dell’app. ([Tauri][9])
+
+**9. Database**
+
+* **Non usarlo subito**, salvo che tu voglia tracciare:
+
+  * cronologia esecuzioni
+  * statistiche
+  * log dei workflow
+  * versioni dei preset
+* Se servirà, usa **SQLite** tramite **Tauri SQL plugin**
+
+SQLite è serverless, self-contained e zero-configuration; ottimo per una desktop app locale. Ma per la prima versione rischia solo di complicarti. ([Tauri][10])
+
+**10. Sicurezza / permessi**
+
+* usa il sistema di **permissions/capabilities** di Tauri
+* limita da subito:
+
+  * quali path può leggere
+  * quali file/URL può aprire
+  * quali comandi shell può eseguire
+
+Tauri spinge esplicitamente questo modello a permessi, quindi conviene progettare l’app così fin dall’inizio. ([Tauri][11])
+
+**11. Distribuzione**
+
+* build con **Tauri CLI**
+* output come **.app macOS**
+* updater solo più avanti, se l’app smette di essere solo tua ([Tauri][2])
+
+Quindi la lista finale, asciutta, è questa:
+
+**Da usare subito**
+
+* Tauri 2
+* React
+* Vite
+* JavaScript
+* Tailwind CSS 4
+* shadcn/ui
+* Zustand
+* Tauri Store
+* Tauri Dialog
+* Tauri File System
+* Tauri Path
+* Tauri Opener
+* Tauri Autostart
+* Tauri Tray
+* Tauri Global Shortcut
+* Tauri Shell
+* zsh
+* AppleScript
+* Git/GitHub ([Tauri][1])
+
+**Da aggiungere solo se il prodotto cresce**
+
+* SQLite
+* Tauri SQL plugin
+* updater
+* eventuali sidecar binaries dedicati ([Tauri][10])
+
+**Da non scegliere come stack principale adesso**
+
+* Java desktop classico per tutta l’app
+* Electron, a meno che tu voglia sacrificare leggerezza pur di stare nell’ecosistema più noto basato su Chromium e Node.js ([Electron][12])
+
+La sintesi brutalmente onesta è questa:
+
+**Il prodotto dovrebbe essere costruito come app Tauri con frontend React/Vite e automazioni locali pilotate da script macOS. Non come app Java.**
+
+Domanda critica: stai progettando un semplice **launcher di workflow** oppure un sistema con **regole, trigger e memoria storica delle esecuzioni**? Perché lì cambia subito se basta Store o se devi mettere SQLite già dalla v1.
+
+[1]: https://v2.tauri.app/start/?utm_source=chatgpt.com "What is Tauri?"
+[2]: https://v2.tauri.app/distribute/macos-application-bundle/?utm_source=chatgpt.com "macOS Application Bundle"
+[3]: https://react.dev/learn?utm_source=chatgpt.com "Quick Start"
+[4]: https://tailwindcss.com/?utm_source=chatgpt.com "Tailwind CSS - Rapidly build modern websites without ever ..."
+[5]: https://zustand.docs.pmnd.rs/?utm_source=chatgpt.com "Zustand: Introduction"
+[6]: https://v2.tauri.app/plugin/store/?utm_source=chatgpt.com "Store"
+[7]: https://v2.tauri.app/plugin/dialog/?utm_source=chatgpt.com "Dialog"
+[8]: https://v2.tauri.app/plugin/autostart/?utm_source=chatgpt.com "Autostart"
+[9]: https://v2.tauri.app/plugin/shell/ "Shell | Tauri"
+[10]: https://v2.tauri.app/plugin/sql/?utm_source=chatgpt.com "SQL"
+[11]: https://v2.tauri.app/reference/javascript/fs/?utm_source=chatgpt.com "@tauri-apps/plugin-fs | Tauri"
+[12]: https://electronjs.org/?utm_source=chatgpt.com "Electron: Build cross-platform desktop apps with JavaScript ..."

@@ -104,34 +104,38 @@ function getActionTarget(action) {
 }
 
 function toWorkspaceCardModel(workspace, readiness, runtime) {
+  const safeWorkspace = workspace && typeof workspace === "object" ? workspace : {};
+  const safeActions = Array.isArray(safeWorkspace.actions) ? safeWorkspace.actions : [];
   const safeReadiness = readiness || { executable: false, reason: "Not validated" };
-  const triggerValue = workspace.trigger?.value ? normalizeShortcutForUi(workspace.trigger.value) : "";
+  const triggerValue = safeWorkspace.trigger?.value
+    ? normalizeShortcutForUi(safeWorkspace.trigger.value)
+    : "";
   const primaryPath =
-    workspace.actions.find((action) => action.folderPath || action.projectPath)?.folderPath ||
-    workspace.actions.find((action) => action.projectPath)?.projectPath ||
+    safeActions.find((action) => action?.folderPath || action?.projectPath)?.folderPath ||
+    safeActions.find((action) => action?.projectPath)?.projectPath ||
     "Not configured";
 
   return {
-    id: workspace.id,
-    groupId: workspace.category,
-    title: workspace.name,
-    description: workspace.description,
-    category: formatCategory(workspace.category),
+    id: safeWorkspace.id || `workspace-${Math.random().toString(36).slice(2, 8)}`,
+    groupId: safeWorkspace.category || WORKSPACE_CATEGORIES.OTHER,
+    title: safeWorkspace.name || "Untitled workspace",
+    description: safeWorkspace.description || "No description",
+    category: formatCategory(safeWorkspace.category),
     trigger: triggerValue,
     status: safeReadiness.executable ? "Ready" : "Blocked",
     executionState: safeReadiness.executable ? "Executable now" : safeReadiness.reason,
-    estimatedTime: `${Math.max(2, workspace.actions.length * 2)}s`,
+    estimatedTime: `${Math.max(2, safeActions.length * 2)}s`,
     primaryPath,
-    focus: workspace.notes || "Operational context preset",
+    focus: safeWorkspace.notes || "Operational context preset",
     details: [
-      { label: "Category", value: formatCategory(workspace.category) },
+      { label: "Category", value: formatCategory(safeWorkspace.category) },
       { label: "Trigger", value: triggerValue || "Manual only" },
       { label: "Primary path", value: primaryPath },
-      { label: "Actions", value: `${workspace.actions.length} steps` },
+      { label: "Actions", value: `${safeActions.length} steps` },
       { label: "Execution", value: safeReadiness.executable ? "Ready / executable" : "Needs setup" },
-      { label: "Focus", value: workspace.notes || "Immediate context launch" },
+      { label: "Focus", value: safeWorkspace.notes || "Immediate context launch" },
     ],
-    actions: workspace.actions.map((action, index) => ({
+    actions: safeActions.map((action, index) => ({
       id: action.id,
       type: action.type,
       title: action.name || `Step ${index + 1}`,
@@ -148,30 +152,22 @@ function App() {
   const [noticeMessage, setNoticeMessage] = useState("");
   const [autostartEnabled, setAutostartEnabled] = useState(false);
 
-  const {
-    workspaces,
-    preferences,
-    hydration,
-    runtime,
-    setActiveWorkspaceId,
-    patchPreferences,
-  } = useWorkspaceStore((state) => ({
-    workspaces: state.workspaces,
-    preferences: state.preferences,
-    hydration: state.hydration,
-    runtime: state.runtime,
-    setActiveWorkspaceId: state.setActiveWorkspaceId,
-    patchPreferences: state.patchPreferences,
-  }));
+  const workspaces = useWorkspaceStore((state) => state.workspaces);
+  const preferences = useWorkspaceStore((state) => state.preferences);
+  const hydration = useWorkspaceStore((state) => state.hydration);
+  const runtime = useWorkspaceStore((state) => state.runtime);
+  const setActiveWorkspaceId = useWorkspaceStore((state) => state.setActiveWorkspaceId);
+  const patchPreferences = useWorkspaceStore((state) => state.patchPreferences);
 
   const workspaceReadinessMap = useMemo(() => {
-    const readinessEntries = workspaces.map((workspace) => [workspace.id, getWorkspaceReadiness(workspace)]);
+    const safeWorkspaces = Array.isArray(workspaces) ? workspaces : [];
+    const readinessEntries = safeWorkspaces.map((workspace) => [workspace?.id, getWorkspaceReadiness(workspace)]);
     return new Map(readinessEntries);
   }, [workspaces]);
 
   const workspaceCards = useMemo(
     () =>
-      workspaces.map((workspace) =>
+      (Array.isArray(workspaces) ? workspaces : []).map((workspace) =>
         toWorkspaceCardModel(workspace, workspaceReadinessMap.get(workspace.id), runtime),
       ),
     [runtime, workspaceReadinessMap, workspaces],
