@@ -1,7 +1,6 @@
 import { runWorkspace as runWorkspaceExecution } from "../engine/actionRunner.js";
 import { getWorkspaceReadiness, validateWorkspaceCollection } from "../domain/workspaceSchema.js";
 import { cloneWorkspace, nowIso, WORKSPACE_STORE_VERSION } from "../domain/workspaceTypes.js";
-import { getWorkspaceSeeds } from "../domain/workspaceSeeds.js";
 import { useWorkspaceStore } from "../state/workspaceStore.js";
 import { appPersistenceStore } from "./persistenceStore.js";
 
@@ -12,33 +11,22 @@ const DEFAULT_PREFERENCES = {
   defaultRunMode: "sequential",
 };
 
-function mergeWorkspaceSets(seedWorkspaces, storedWorkspaces) {
-  const storedById = new Map((storedWorkspaces || []).map((workspace) => [workspace.id, cloneWorkspace(workspace)]));
-  const merged = [];
-
-  for (const seed of seedWorkspaces) {
-    if (storedById.has(seed.id)) {
-      merged.push(storedById.get(seed.id));
-      storedById.delete(seed.id);
-    } else {
-      merged.push(cloneWorkspace(seed));
-    }
-  }
-
-  for (const remaining of storedById.values()) {
-    merged.push(remaining);
-  }
-
-  return merged;
-}
-
 function normalizeLoadedSnapshot(snapshot) {
   if (!snapshot || typeof snapshot !== "object") {
     return null;
   }
 
+  const hasStatePayload =
+    Array.isArray(snapshot.workspaces) ||
+    (snapshot.preferences && typeof snapshot.preferences === "object") ||
+    typeof snapshot.updatedAt === "string";
+
   return {
     version: Number(snapshot.version || WORKSPACE_STORE_VERSION),
+    initialized:
+      typeof snapshot.initialized === "boolean"
+        ? snapshot.initialized
+        : hasStatePayload,
     workspaces: Array.isArray(snapshot.workspaces) ? snapshot.workspaces.map((workspace) => cloneWorkspace(workspace)) : [],
     preferences: {
       ...DEFAULT_PREFERENCES,
@@ -50,15 +38,16 @@ function normalizeLoadedSnapshot(snapshot) {
 
 export function createWorkspaceService({
   persistence = appPersistenceStore,
-  seedWorkspaces = getWorkspaceSeeds(),
+  initialWorkspaces = [],
 } = {}) {
-  const seedList = seedWorkspaces.map((workspace) => cloneWorkspace(workspace));
+  const defaults = Array.isArray(initialWorkspaces)
+    ? initialWorkspaces.map((workspace) => cloneWorkspace(workspace))
+    : [];
 
-  function snapshotFromStore() {
-    const state = useWorkspaceStore.getState();
-
+  function snapshotFromState(state) {
     return {
       version: WORKSPACE_STORE_VERSION,
+      initialized: true,
       workspaces: state.workspaces.map((workspace) => cloneWorkspace(workspace)),
       preferences: {
         ...DEFAULT_PREFERENCES,
@@ -66,6 +55,10 @@ export function createWorkspaceService({
       },
       updatedAt: nowIso(),
     };
+  }
+
+  function snapshotFromStore() {
+    return snapshotFromState(useWorkspaceStore.getState());
   }
 
   async function persist() {
@@ -80,12 +73,13 @@ export function createWorkspaceService({
 
     try {
       const persisted = normalizeLoadedSnapshot(await persistence.read(null));
-      const mergedWorkspaces = mergeWorkspaceSets(seedList, persisted?.workspaces || []);
-      const validated = validateWorkspaceCollection(mergedWorkspaces);
+      const isFirstRun = !persisted || !persisted.initialized;
+      const sourceWorkspaces = isFirstRun ? defaults : persisted.workspaces;
+      const validated = validateWorkspaceCollection(sourceWorkspaces);
 
       useWorkspaceStore.getState().hydrate({
         workspaces: validated.workspaces,
-        preferences: persisted?.preferences || DEFAULT_PREFERENCES,
+        preferences: isFirstRun ? DEFAULT_PREFERENCES : persisted.preferences,
       });
 
       const hydratedSnapshot = snapshotFromStore();
@@ -100,7 +94,7 @@ export function createWorkspaceService({
 
   async function resetToSeeds() {
     useWorkspaceStore.getState().reset({
-      workspaces: seedList,
+      workspaces: defaults,
       preferences: {
         ...DEFAULT_PREFERENCES,
       },
@@ -213,7 +207,8 @@ export function createWorkspaceService({
     listWorkspaces,
     listWorkspaceReadiness,
     getSnapshot,
-    seedWorkspaces: seedList,
+    seedWorkspaces: defaults,
+    initialWorkspaces: defaults,
     persistence,
   };
 }

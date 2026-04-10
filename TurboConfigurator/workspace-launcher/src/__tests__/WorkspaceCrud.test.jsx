@@ -2,11 +2,71 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 import { useWorkspaceStore } from '../state/workspaceStore';
+import {
+  WORKSPACE_ACTION_TYPES,
+  WORKSPACE_CATEGORIES,
+  WORKSPACE_STORE_VERSION,
+  createWorkspace,
+  createWorkspaceAction,
+} from '../domain/workspaceTypes';
+import { APP_STATE_STORAGE_KEY } from '../services/persistenceStore';
+
+function seedPersistedWorkspaces() {
+  const workspaces = [
+    createWorkspace({
+      id: 'test-metodi-numerici',
+      name: 'Metodi Numerici',
+      description: 'Workspace test per metodi numerici',
+      category: WORKSPACE_CATEGORIES.STUDY,
+      actions: [
+        createWorkspaceAction(WORKSPACE_ACTION_TYPES.OPEN_FOLDER, {
+          name: 'Open study folder',
+          folderPath: '~/Documents/Universita/MetodiNumerici',
+        }),
+      ],
+    }),
+    createWorkspace({
+      id: 'test-aurea-dev',
+      name: 'Aurea Dev Session',
+      description: 'Workspace test per sessione coding',
+      category: WORKSPACE_CATEGORIES.CODING,
+      actions: [
+        createWorkspaceAction(WORKSPACE_ACTION_TYPES.OPEN_VSCODE_PROJECT, {
+          name: 'Open repo',
+          projectPath: '~/Documents/Side hustle/TurboConfigurator/workspace-launcher',
+        }),
+      ],
+    }),
+  ];
+
+  const snapshot = {
+    version: WORKSPACE_STORE_VERSION,
+    initialized: true,
+    workspaces,
+    preferences: {
+      activeWorkspaceId: workspaces[0].id,
+      autoLaunchOnLogin: false,
+      continueOnError: false,
+      defaultRunMode: 'sequential',
+    },
+    updatedAt: new Date().toISOString(),
+  };
+
+  window.localStorage.setItem(
+    APP_STATE_STORAGE_KEY,
+    JSON.stringify({
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      value: snapshot,
+    }),
+  );
+}
 
 describe('Workspace CRUD interactions', () => {
   beforeEach(() => {
     useWorkspaceStore.getState().reset();
     window.localStorage.clear();
+    seedPersistedWorkspaces();
     jest.spyOn(window, 'confirm').mockReturnValue(true);
   });
 

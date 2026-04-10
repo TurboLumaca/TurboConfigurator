@@ -4,6 +4,8 @@ import { Store } from "@tauri-apps/plugin-store";
 const DEFAULT_STORAGE_PREFIX = "workspace-launcher";
 const STORE_FILENAME = "workspace-launcher.store.json";
 const memoryFallback = new Map();
+export const APP_STATE_STORAGE_KEY = `${DEFAULT_STORAGE_PREFIX}:app-state`;
+export const APP_STATE_STORE_FILENAME = STORE_FILENAME;
 
 let tauriStorePromise = null;
 

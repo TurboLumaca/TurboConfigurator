@@ -18,7 +18,8 @@ describe('App', () => {
     await waitFor(() => {
       const state = useWorkspaceStore.getState();
       expect(Array.isArray(state.workspaces)).toBe(true);
-      expect(state.workspaces.length).toBeGreaterThan(0);
+      expect(state.workspaces.length).toBe(0);
+      expect(state.hydration.status).toBe('ready');
     });
   });
 });
